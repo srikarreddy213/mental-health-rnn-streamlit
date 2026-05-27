@@ -1,4 +1,19 @@
 import streamlit as st
+
+# =========================================
+# PAGE CONFIG (MUST BE FIRST STREAMLIT COMMAND)
+# =========================================
+
+st.set_page_config(
+    page_title="MindPulse AI",
+    page_icon="🧠",
+    layout="centered"
+)
+
+# =========================================
+# IMPORTS
+# =========================================
+
 import tensorflow as tf
 import pickle
 import numpy as np
@@ -30,21 +45,39 @@ if not os.path.exists(MODEL_FILE):
 # LOAD MODEL
 # =========================================
 
-model = tf.keras.models.load_model(MODEL_FILE)
+@st.cache_resource
+def load_model():
+    return tf.keras.models.load_model(MODEL_FILE)
+
+model = load_model()
 
 # =========================================
 # LOAD TOKENIZER
 # =========================================
 
-with open("tokenizer.pkl", "rb") as f:
-    tokenizer = pickle.load(f)
+@st.cache_resource
+def load_tokenizer():
+
+    with open("tokenizer.pkl", "rb") as f:
+        tokenizer = pickle.load(f)
+
+    return tokenizer
+
+tokenizer = load_tokenizer()
 
 # =========================================
 # LOAD LABEL ENCODER
 # =========================================
 
-with open("label_encoder.pkl", "rb") as f:
-    label_encoder = pickle.load(f)
+@st.cache_resource
+def load_label_encoder():
+
+    with open("label_encoder.pkl", "rb") as f:
+        label_encoder = pickle.load(f)
+
+    return label_encoder
+
+label_encoder = load_label_encoder()
 
 # =========================================
 # CONSTANTS
@@ -60,7 +93,7 @@ TRUNC_TYPE = 'post'
 
 def predict_sentiment(text):
 
-    # Convert text into sequence
+    # Convert text to sequence
     sequence = tokenizer.texts_to_sequences([text])
 
     # Pad sequence
@@ -85,31 +118,23 @@ def predict_sentiment(text):
     return predicted_label, confidence
 
 # =========================================
-# STREAMLIT PAGE CONFIG
+# UI
 # =========================================
 
-st.set_page_config(
-    page_title="Mental Health Sentiment Analysis",
-    page_icon="🧠",
-    layout="centered"
-)
-
-# =========================================
-# UI DESIGN
-# =========================================
-
-st.title("🧠 Mental Health Sentiment Analysis")
+st.title("🧠 MindPulse AI")
 
 st.markdown(
     """
+    ### Mental Health Sentiment Analysis
+    
     This AI model predicts mental health sentiment
     from user text using a Simple RNN model.
     """
 )
 
-# Text input
+# Text area
 user_input = st.text_area(
-    "Enter Your Text Here",
+    "Enter Your Text",
     height=150,
     placeholder="Type how you feel..."
 )
@@ -138,4 +163,6 @@ if st.button("Predict Sentiment"):
 
 st.markdown("---")
 
-st.caption("Built with TensorFlow, Streamlit, and Simple RNN")
+st.caption(
+    "Built with TensorFlow, Streamlit, and Simple RNN"
+)
